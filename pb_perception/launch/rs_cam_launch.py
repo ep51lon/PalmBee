@@ -1,9 +1,4 @@
-# Requirements:
-#   A realsense D435i
-#   Install realsense2 ros2 package (ros-$ROS_DISTRO-realsense2-camera)
-# Example:
-#   $ ros2 launch rtabmap_examples realsense_d435i_stereo.launch.py
-
+#!/usr/bin/env python3
 import os
 
 from ament_index_python.packages import get_package_share_directory
