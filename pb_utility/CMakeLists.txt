@@ -30,7 +30,7 @@ ament_python_install_package(${PROJECT_NAME})
 # Install Python executables
 install(PROGRAMS
   scripts/py_node.py
-  scripts/conversion/bag2text.py
+  scripts/conversion/topic2txt.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
