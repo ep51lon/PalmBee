@@ -42,7 +42,7 @@ class CalculateDistanceNode(Node):
             self.image_callback,
             10
         )
-        self.image_publisher = self.create_publisher(Image, 'apriltag/annotated_image', 10)
+        self.image_publisher = self.create_publisher(Image, 'palmbee/apriltag/annotated_image', 10)
         self.bridge = CvBridge()
         self.current_image = None
         self.df = pd.DataFrame(columns=['timestamp', 'tag_id', 'pos_x', 'pos_y', 'pos_z', 'distance'])
