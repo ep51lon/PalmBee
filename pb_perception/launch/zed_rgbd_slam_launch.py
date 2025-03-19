@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Requirements:
 #   A ZED camera
 #   Install zed ros2 wrapper package (https://github.com/stereolabs/zed-ros2-wrapper)
