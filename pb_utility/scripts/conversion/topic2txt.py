@@ -6,7 +6,7 @@ from geometry_msgs.msg import PoseWithCovarianceStamped
 class Topic2Text(Node):
 
     def __init__(self):
-        super().__init__('bag2text')
+        super().__init__('topic2text')
         self.subscription = self.create_subscription(
             PoseWithCovarianceStamped,
             '/localization_pose',
