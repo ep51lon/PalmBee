@@ -95,7 +95,7 @@ def generate_launch_description():
             description='Use zed\'s computed odometry instead of using rtabmap\'s odometry.'),
         
         DeclareLaunchArgument(
-            'camera_model', default_value='',
+            'camera_model', default_value='zed2i',
             description="[REQUIRED] The model of the camera. Using a wrong camera model can disable camera features. Valid choices are: ['zed', 'zedm', 'zed2', 'zed2i', 'zedx', 'zedxm', 'virtual']"),
         
         OpaqueFunction(function=launch_setup)
