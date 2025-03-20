@@ -108,7 +108,7 @@ class CalculateDistanceNode(Node):
             self.last_append_time = current_time
 
     def save_to_csv(self):
-        self.df.to_csv('/home/ep51lon/Utility/Realsense/realsense_ws/src/rs_slam/rs_slam/detected_markers.csv', index=False)
+        self.df.to_csv('detected_markers.csv', index=False)
 
 def main(args=None):
     rclpy.init(args=args)
