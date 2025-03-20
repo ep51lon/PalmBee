@@ -147,11 +147,11 @@ This guide provides detailed steps to execute various tests for the PalmBee proj
     ros2 run pb_perception get_markers.py
     ```
 
-4. **Open rqt_image_view to display the image from ROS2 topic `apriltag/detections`**
+4. **Open rqt_image_view to display the image from ROS2 topic `palmbee/apriltag/annotated_image`**
     ```bash
     ros2 run rqt_image_view rqt_image_view
     ```
-    - Select `apriltag/detections` to display the image.
+    - Select `palmbee/apriltag/annotated_image` to display the image.
 
 5. **Move the camera around a tag and check if the coordinates of the tags are static**
     - Verify that the coordinates of the detected tags remain static relative to the map frame.

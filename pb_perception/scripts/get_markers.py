@@ -38,7 +38,8 @@ class CalculateDistanceNode(Node):
         )
         self.image_subscription = self.create_subscription(
             Image,
-            'camera/infra1/image_rect_raw',
+            # 'camera/infra1/image_rect_raw',
+            'zed/zed_node/left/image_rect_color',
             self.image_callback,
             10
         )
