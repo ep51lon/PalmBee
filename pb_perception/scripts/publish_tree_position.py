@@ -53,9 +53,7 @@ class CalculateDistanceNode(Node):
         self.tag_detection_times = {}
         self.last_detected_tag_id = None
         self.last_detected_position = None
-        self.user_defined_tag_id = 1  # User-defined tag_id to keep publishing its position
-        self.declare_parameter('user_defined_tag_id', self.user_defined_tag_id)
-        self.add_on_set_parameters_callback(self.parameter_callback)
+        self.user_defined_tag_id = 0  # User-defined tag_id to keep publishing its position
         self.srv = self.create_service(AddTwoInts, 'update_tag_id', self.update_tag_id_callback)  # Create service
 
     def update_tag_id_callback(self, request, response):
@@ -63,13 +61,6 @@ class CalculateDistanceNode(Node):
         response.sum = self.user_defined_tag_id  # Return the updated tag_id as the sum
         self.get_logger().info(f"Updated user_defined_tag_id to {self.user_defined_tag_id}")
         return response
-
-    def parameter_callback(self, params):
-        for param in params:
-            if param.name == 'user_defined_tag_id' and param.type_ == ParameterValue.TYPE_INTEGER:
-                self.user_defined_tag_id = param.value
-                self.get_logger().info(f"Updated user_defined_tag_id to {self.user_defined_tag_id}")
-        return SetParametersResult(successful=True)
 
     def detection_callback(self, msg):
         self.detections = [detection for detection in msg.detections]
