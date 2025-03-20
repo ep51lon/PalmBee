@@ -59,7 +59,6 @@ class CalculateDistanceNode(Node):
             self.get_logger().error(f"Failed to convert image: {e}")
 
     def timer_callback(self):
-        self.get_logger().info(f"Waiting for tf...")
         current_time = self.get_clock().now().to_msg().sec
         if self.current_image is not None:
             annotated_image = self.current_image.copy()
@@ -102,6 +101,8 @@ class CalculateDistanceNode(Node):
                 self.image_publisher.publish(annotated_image_msg)
             except CvBridgeError as e:
                 self.get_logger().error(f"Failed to convert annotated image: {e}")
+        else:
+            self.get_logger().info(f"Waiting for tf...")
 
         if current_time - self.last_append_time >= 5:
             self.save_to_csv()
