@@ -32,7 +32,7 @@ def generate_launch_description():
         ],
         parameters=[{
             'family': '36h11',
-            'size': 0.0926,  # Set AprilTag size in meters
+            'size': 0.17,  # Set AprilTag size in meters
         }],
         extra_arguments=[{'use_intra_process_comms': True}]
     )
