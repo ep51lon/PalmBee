@@ -64,12 +64,12 @@ def launch_setup(context: LaunchContext, *args, **kwargs):
         ),
 
         # RTAB-Map SLAM
-        Node(
-            package='rtabmap_slam', executable='rtabmap', output='screen',
-            parameters=parameters,
-            remappings=remappings,
-            arguments=['-d']
-        ),
+        # Node(
+        #     package='rtabmap_slam', executable='rtabmap', output='screen',
+        #     parameters=parameters,
+        #     remappings=remappings,
+        #     arguments=['-d']
+        # ),
 
         # RTAB-Map Visualization
         # Node(
