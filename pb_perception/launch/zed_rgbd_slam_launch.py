@@ -79,10 +79,10 @@ def launch_setup(context: LaunchContext, *args, **kwargs):
             arguments=['-d']),
 
         # Visualization
-        Node(
-            package='rtabmap_viz', executable='rtabmap_viz', output='screen',
-            parameters=parameters,
-            remappings=remappings)
+        # Node(
+        #     package='rtabmap_viz', executable='rtabmap_viz', output='screen',
+        #     parameters=parameters,
+        #     remappings=remappings)
     ]
 
 
