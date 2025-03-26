@@ -19,7 +19,4 @@
 
         depth:
             depth_mode: 'NONE'
-        
-        # pos_tracking:
-        #     pos_tracking_enabled: false
-        #     imu_fusion: true
+
