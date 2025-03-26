@@ -8,7 +8,7 @@ from launch.actions import DeclareLaunchArgument
 from launch_ros.actions import Node
 from launch.actions import IncludeLaunchDescription, OpaqueFunction
 from launch.substitutions import LaunchConfiguration
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.launch_description_sources import PythonLaunchDescriptionSource, AnyLaunchDescriptionSource
 from launch.conditions import UnlessCondition
 
 import tempfile
@@ -17,26 +17,24 @@ parameters = []
 remappings = []
 
 def launch_setup(context: LaunchContext, *args, **kwargs):
-
-    # Hack to override grab_resolution parameter without modifying config files
-    with tempfile.NamedTemporaryFile(mode='w+t', delete=False) as zed_override_file:
-        zed_override_file.write("---\n"+
-                  "/**:\n"+
-                  "    ros__parameters:\n"+
-                  "        general:\n"+
-                  "            grab_resolution: 'VGA'")
-
     parameters=[{'frame_id': 'zed_camera_link',
                  'subscribe_stereo': True,
                  'approx_sync': False,
                  'wait_imu_to_init': True}]
 
+    # remappings=[
+    #     ('imu', '/zed/zed_node/imu/data'),
+    #     ('left/image_rect', '/zed/zed_node/left/image_rect_color'),
+    #     ('right/image_rect', '/zed/zed_node/right/image_rect_color'),
+    #     ('left/camera_info', '/zed/zed_node/left/camera_info'),
+    #     ('right/camera_info', '/zed/zed_node/right/camera_info')
+    # ]
     remappings=[
         ('imu', '/zed/zed_node/imu/data'),
-        ('left/image_rect', '/zed/zed_node/left/image_rect_color'),
-        ('right/image_rect', '/zed/zed_node/right/image_rect_color'),
-        ('left/camera_info', '/zed/zed_node/left/camera_info'),
-        ('right/camera_info', '/zed/zed_node/right/camera_info')
+        ('left/image_rect', '/zed/zed_node/left_gray/image_rect_gray'),
+        ('right/image_rect', '/zed/zed_node/right_gray/image_rect_gray'),
+        ('left/camera_info', '/zed/zed_node/left_gray/camera_info'),
+        ('right/camera_info', '/zed/zed_node/right_gray/camera_info')
     ]
 
     if LaunchConfiguration('use_zed_odometry').perform(context) in ["True", "true"]:
@@ -48,10 +46,9 @@ def launch_setup(context: LaunchContext, *args, **kwargs):
         # Launch ZED camera driver
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([os.path.join(
-                get_package_share_directory('zed_wrapper'), 'launch'),
-                '/zed_camera.launch.py']),
+                get_package_share_directory('pb_perception'), 'launch'),
+                '/zed_stereo_launch.py']),
                 launch_arguments={'camera_model': LaunchConfiguration('camera_model'),
-                                  'ros_params_override_path': zed_override_file.name,
                                   'publish_tf': LaunchConfiguration('use_zed_odometry'),
                                   'publish_map_tf': 'false'}.items(),
         ),
@@ -71,12 +68,24 @@ def launch_setup(context: LaunchContext, *args, **kwargs):
             arguments=['-d']
         ),
 
-        # RTAB-Map Visualization
-        Node(
-            package='rtabmap_viz', executable='rtabmap_viz', output='screen',
-            parameters=parameters,
-            remappings=remappings
+        # # RTAB-Map Visualization
+        # Node(
+        #     package='rtabmap_viz', executable='rtabmap_viz', output='screen',
+        #     parameters=parameters,
+        #     remappings=remappings
+        # ),
+
+        # Include Foxglove Bridge launch file
+        IncludeLaunchDescription(
+            AnyLaunchDescriptionSource(
+                os.path.join(
+                    get_package_share_directory('foxglove_bridge'),
+                    'launch',
+                    'foxglove_bridge_launch.xml'
+                )
+            ),
         ),
+        
     ]
 
 def generate_launch_description():
