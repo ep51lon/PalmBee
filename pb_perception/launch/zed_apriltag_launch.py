@@ -10,13 +10,15 @@ def generate_launch_description():
     # Declare launch argument for image topic source
     image_topic_arg = DeclareLaunchArgument(
         'image_topic',
-        default_value='/zed/zed_node/left/image_rect_color',
+        # default_value='/zed/zed_node/left/image_rect_color',
+        default_value='/zed/zed_node/left_gray/image_rect_gray',
         description='Image topic for AprilTag detection'
     )
 
     camera_info_arg = DeclareLaunchArgument(
         'camera_info_topic',
-        default_value='/zed/zed_node/left/camera_info',
+        # default_value='/zed/zed_node/left/camera_info',
+        default_value='/zed/zed_node/left_gray/camera_info',
         description='Camera info topic'
     )
 
@@ -32,7 +34,7 @@ def generate_launch_description():
         ],
         parameters=[{
             'family': '36h11',
-            'size': 0.17,  # Set AprilTag size in meters
+            'size': 0.1434, # 0.0916,  # Set AprilTag size in meters
         }],
         extra_arguments=[{'use_intra_process_comms': True}]
     )
