@@ -126,7 +126,7 @@ class CalculateDistanceNode(Node):
     def update_tag_positions(self, tag_id, transform):
         translation = transform.transform.translation
         self.tag_positions[tag_id].append((translation.x, translation.y, translation.z))
-        if len(self.tag_positions[tag_id]) > 10:
+        if len(self.tag_positions[tag_id]) > 20:
             self.tag_positions[tag_id].pop(0)
 
     def update_database(self, tag_id):
