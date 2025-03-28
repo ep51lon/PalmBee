@@ -31,6 +31,8 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
   scripts/py_node.py
   scripts/get_markers.py
+  scripts/update_database.py
+  scripts/retrieve_database.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
