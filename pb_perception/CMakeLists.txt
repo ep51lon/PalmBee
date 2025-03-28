@@ -33,6 +33,7 @@ install(PROGRAMS
   scripts/get_markers.py
   scripts/update_database.py
   scripts/retrieve_database.py
+  scripts/call_request_position_service.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
