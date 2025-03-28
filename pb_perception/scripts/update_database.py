@@ -11,7 +11,7 @@ from sensor_msgs.msg import Image  # Import Image message
 from cv_bridge import CvBridge, CvBridgeError  # Import CvBridge and CvBridgeError
 import cv2  # Import OpenCV
 import numpy as np  # Import NumPy
-from pb_perception.palmbee_db import PalmTreeDB  # Import the database module
+from pb_perception.palmtree_db import PalmTreeDB  # Import the database module
 from collections import defaultdict  # Import defaultdict for storing tag positions
 
 def calculate_distance(transform):
