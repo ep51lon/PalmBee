@@ -15,8 +15,10 @@ class ObjectDetectionNode(Node):
         self.get_logger().info("Loading YOLOv8 model...")
         # self.model = YOLO('yolov8n.pt')  # Use a lightweight YOLOv8 model
         model_dir = '/home/palmbee1/palmbee_ws/src/PalmBee/pb_perception/model'
-        self.model = YOLO(f'{model_dir}/best_pohon.pt')  # Use a lightweight YOLOv8 model
-        # self.model.to('cuda')  # Use GPU for inference if available
+        # self.model = YOLO(f'{model_dir}/best_bunga_buah.pt')  # Bunga-buah
+        self.model = YOLO(f'{model_dir}/best_pohon.pt')  # pohon
+        # self.model = YOLO(f'{model_dir}/yolov8n.pt')  # Use a lightweight YOLOv8 model
+        self.model.to('cuda')  # Use GPU for inference if available
 
         # ROS2 subscription to image topic
         self.subscription = self.create_subscription(
