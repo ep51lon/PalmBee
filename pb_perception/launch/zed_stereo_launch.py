@@ -151,6 +151,7 @@ def launch_setup(context, *args, **kwargs):
         get_package_share_directory('pb_perception'),
         'config',
         camera_model_val + '_custom.yaml'
+        # camera_model_val + '_custom_default.yaml'
     )
 
     info = 'Using camera configuration file: ' + config_camera_path

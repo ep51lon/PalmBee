@@ -20,3 +20,6 @@
         depth:
             depth_mode: 'NONE'
 
+        object_detection:
+            od_enabled: true
+
