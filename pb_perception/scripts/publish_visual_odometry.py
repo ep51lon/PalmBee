@@ -19,10 +19,14 @@ class VisualOdometryPublisher(Node):
             10
         )
 
+        self.published = False
+
         self.timer = self.create_timer(0.05, self.timer_callback)  # 20Hz
 
     def timer_callback(self):
         try:
+            if self.published == False:
+                self.get_logger().info("Publishing TF...")
             tf: TransformStamped = self.tf_buffer.lookup_transform(
                 'world', 'zed_camera_link', rclpy.time.Time(), timeout=rclpy.duration.Duration(seconds=0.1)
             )
@@ -58,6 +62,7 @@ class VisualOdometryPublisher(Node):
 
             self.publisher.publish(msg)
             # self.get_logger().info('Published visual odometry')
+            self.published = True
 
         except Exception as e:
             self.get_logger().warn(f'TF lookup failed: {e}')
