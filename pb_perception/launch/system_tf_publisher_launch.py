@@ -11,8 +11,9 @@ def generate_launch_description():
             name='static_map_to_slam_tf',
             arguments=[
                 '0', '0', '0',          # translation
-                '-1.5708', '0.0', '0.0',  # yaw, pitch, roll
-                'map', 'slam'           # parent → child
+                # '-1.5708', '0.0', '0.0',  # yaw, pitch, roll # Realsense
+                '0.0', '0.0', '0.0',  # yaw, pitch, roll # ZED
+                'slam', 'map'           # parent → child
             ],
             output='screen'
         ),
@@ -25,7 +26,7 @@ def generate_launch_description():
             arguments=[
                 '0', '0', '0',          # translation
                 '0.0', '0.0', '3.14159',  # yaw, pitch, roll
-                'slam', 'world'         # parent → child
+                'world', 'slam'         # parent → child
             ],
             output='screen'
         ),

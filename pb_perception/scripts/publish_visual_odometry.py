@@ -24,7 +24,7 @@ class VisualOdometryPublisher(Node):
     def timer_callback(self):
         try:
             tf: TransformStamped = self.tf_buffer.lookup_transform(
-                'world', 'camera_link', rclpy.time.Time(), timeout=rclpy.duration.Duration(seconds=0.1)
+                'world', 'zed_camera_link', rclpy.time.Time(), timeout=rclpy.duration.Duration(seconds=0.1)
             )
 
             msg = VehicleOdometry()
@@ -57,7 +57,7 @@ class VisualOdometryPublisher(Node):
             msg.velocity_variance = [1e2, 1e2, 1e2]  # very high uncertainty
 
             self.publisher.publish(msg)
-            self.get_logger().info('Published visual odometry')
+            # self.get_logger().info('Published visual odometry')
 
         except Exception as e:
             self.get_logger().warn(f'TF lookup failed: {e}')
