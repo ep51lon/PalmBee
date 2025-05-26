@@ -33,6 +33,7 @@ install(PROGRAMS
   scripts/get_markers.py
   scripts/detect_object.py
   scripts/publish_visual_odometry.py
+  scripts/subscribe_position.py
   scripts/update_database.py
   scripts/retrieve_database.py
   scripts/call_request_position_service.py
