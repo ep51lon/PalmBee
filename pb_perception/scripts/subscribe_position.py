@@ -37,8 +37,8 @@ class PositionSubscriber(Node):
             # VehicleLocalPosition: x, y, z
             # VehicleOdometry: position[0], position[1], position[2]
             self.get_logger().info(
-                f"{self.local_position.x:.3f}, {self.local_position.y:.3f}, {self.local_position.z:.3f}, "
-                f"{self.visual_odometry.position[0]:.3f}, {self.visual_odometry.position[1]:.3f}, {self.visual_odometry.position[2]:.3f}"
+                f"Local: {self.local_position.x:.3f}, {self.local_position.y:.3f}, {self.local_position.z:.3f}, "
+                f"VIO: {self.visual_odometry.position[0]:.3f}, {self.visual_odometry.position[1]:.3f}, {self.visual_odometry.position[2]:.3f}"
             )
 
 def main(args=None):
