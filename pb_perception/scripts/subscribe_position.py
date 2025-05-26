@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-from px4_msgs.msg import VehicleLocalPosition, VehicleOdometry  # Ensure px4_msgs is installed
+from px4_msgs.msg import VehicleLocalPosition, VehicleOdometry
+from rclpy.qos import QoSProfile, ReliabilityPolicy
 
 class PositionSubscriber(Node):
     def __init__(self):
         super().__init__('position_subscriber')
+        qos = QoSProfile(depth=10, reliability=ReliabilityPolicy.BEST_EFFORT)
         self.local_position = None
         self.visual_odometry = None
 
@@ -13,13 +15,13 @@ class PositionSubscriber(Node):
             VehicleLocalPosition,
             '/fmu/out/vehicle_local_position',
             self.local_position_callback,
-            10
+            qos
         )
         self.create_subscription(
             VehicleOdometry,
             '/fmu/in/vehicle_visual_odometry',
             self.visual_odometry_callback,
-            10
+            qos
         )
 
     def local_position_callback(self, msg):
