@@ -34,9 +34,11 @@ class PositionSubscriber(Node):
 
     def display_data(self):
         if self.local_position is not None and self.visual_odometry is not None:
+            # VehicleLocalPosition: x, y, z
+            # VehicleOdometry: position[0], position[1], position[2]
             self.get_logger().info(
                 f"{self.local_position.x:.2f}, {self.local_position.y:.2f}, {self.local_position.z:.2f}, "
-                f"{self.visual_odometry.x:.2f}, {self.visual_odometry.y:.2f}, {self.visual_odometry.z:.2f}"
+                f"{self.visual_odometry.position[0]:.2f}, {self.visual_odometry.position[1]:.2f}, {self.visual_odometry.position[2]:.2f}"
             )
 
 def main(args=None):
