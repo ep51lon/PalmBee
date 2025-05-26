@@ -53,6 +53,18 @@ def launch_setup(context: LaunchContext, *args, **kwargs):
                                   'publish_map_tf': 'false'}.items(),
         ),
 
+        # Launch SLAM tf publisher world->slam
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(
+                get_package_share_directory('pb_perception'), 'launch'),
+                '/system_tf_publisher_launch.py']),
+        ),
+
+        # Stereo Odometry Node
+        Node(
+            package='pb_perception', executable='publish_visual_odometry.py', output='screen',
+        ),
+
         # Stereo Odometry Node
         Node(
             package='rtabmap_odom', executable='stereo_odometry', output='screen',
