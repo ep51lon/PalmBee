@@ -304,6 +304,7 @@ class MotionController(Node):
                 self.waiting_time = 0.0  # reset timer
                 self.start_hover()
         elif self.state == States.HOVERING:
+            self.waiting_time += self.dt
             if self.waiting_time >= 20.0:
                 self.waiting_time = 0.0  # reset timer
                 self.track_pose()
@@ -311,12 +312,17 @@ class MotionController(Node):
             self.publish_position_setpoint_with_pd_controller(self.waypoints[self.current_waypoint_index])
             self.waiting_time += self.dt  # accumulate time in POSE_TRACKING
             if self.waiting_time >= 20.0:
-                self.start_landing()  # use the new trigger name
                 self.waiting_time = 0.0  # reset timer
+                self.start_landing()  # use the new trigger name
         elif self.state == States.LANDING:
             self.land()
+            self.waiting_time += self.dt  # accumulate time in POSE_TRACKING
+            if self.waiting_time >= 20.0:
+                self.waiting_time = 0.0  # reset timer
+                self.start_disarming()  # use the new trigger name
         elif self.state == States.DISARMING:
             self.disarm()
+            self.standby()  # return to STANDBY state
         elif self.state == States.FAILSAFE:
             self.get_logger().warn("FAILSAFE state reached!")
         elif self.state == States.UNAVAILABLE:
