@@ -293,8 +293,10 @@ class MotionController(Node):
         elif self.state == States.STANDBY:
             self.start_arming()
         elif self.state == States.ARMING:
+            self.engage_offboard_mode()
             self.arm()
-            self.start_taking_off()
+            if self.vehicle_status.nav_state == VehicleStatus.NAVIGATION_STATE_OFFBOARD:
+                self.start_taking_off()
         elif self.state == States.TAKING_OFF:
             self.publish_position_setpoint_with_pd_controller(self.waypoints[self.current_waypoint_index])
             self.waiting_time += self.dt  # accumulate time in POSE_TRACKING
