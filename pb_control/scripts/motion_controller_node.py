@@ -301,11 +301,12 @@ class MotionController(Node):
             self.publish_position_setpoint_with_pd_controller(self.waypoints[self.current_waypoint_index])
             self.waiting_time += self.dt  # accumulate time in POSE_TRACKING
             if self.waiting_time >= 20.0:
-                self.start_landing()  # use the new trigger name
                 self.waiting_time = 0.0  # reset timer
                 self.start_hover()
         elif self.state == States.HOVERING:
-            self.track_pose()
+            if self.waiting_time >= 20.0:
+                self.waiting_time = 0.0  # reset timer
+                self.track_pose()
         elif self.state == States.POSE_TRACKING:
             self.publish_position_setpoint_with_pd_controller(self.waypoints[self.current_waypoint_index])
             self.waiting_time += self.dt  # accumulate time in POSE_TRACKING
