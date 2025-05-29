@@ -283,9 +283,10 @@ class MotionController(Node):
 
         # FSM logic
         if self.state == States.INIT:
-            if self.vehicle_status.arming_state == VehicleStatus.ARMING_STATE_INIT:
+            # PX4 arming_state: 1 = DISARMED, 2 = ARMED
+            if self.vehicle_status.arming_state == self.vehicle_status.ARMING_STATE_DISARMED:
                 self.system_ready()
-            self.waiting_time += self.dt  # accumulate time in POSE_TRACKING
+            self.waiting_time += self.dt  # accumulate time in INIT
             if self.waiting_time >= 5.0:
                 self.start_landing()  # use the new trigger name
                 self.waiting_time = 0.0  # reset timer
