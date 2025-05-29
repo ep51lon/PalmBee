@@ -51,8 +51,8 @@ class TrackingControl(Node):
         self.previous_error = [0.0, 0.0, 0.0]
         self.home_position = [-6.886367753433963, 107.60964063527699, 0.16148334741592407]  # Store home position for NED conversion
 
-        self.kp = 1.0  # Proportional gain for the position controller
-        self.kd = 0.1  # Proportional gain for the position controller
+        self.kp = 1.5  # Proportional gain for the position controller
+        self.kd = 0.2  # Derivative gain for the position controller
 
         # Waypoints
         self.waypoints = [
