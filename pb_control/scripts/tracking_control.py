@@ -249,7 +249,8 @@ class TrackingControl(Node):
                 self.waypoint_timer = 0
 
             # Publish position setpoint for the current waypoint
-            self.publish_position_setpoint_with_p_controller(self.waypoints[self.current_waypoint_index])
+            # self.publish_position_setpoint_with_p_controller(self.waypoints[self.current_waypoint_index])
+            self.publish_position_setpoint_with_pd_controller(self.waypoints[self.current_waypoint_index])
 
         if self.offboard_setpoint_counter < 81:
             self.offboard_setpoint_counter += 1
