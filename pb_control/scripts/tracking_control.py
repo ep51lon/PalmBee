@@ -237,7 +237,7 @@ class TrackingControl(Node):
         self.get_logger().info(f"Current global position: lat={self.vehicle_global_position.lat}, lon={self.vehicle_global_position.lon}, alt={self.vehicle_global_position.alt}")
         self.get_logger().info(f"Current local position: x={self.vehicle_local_position.x}, y={self.vehicle_local_position.y}, z={self.vehicle_local_position.z}")
 
-        if self.offboard_setpoint_counter == 30:
+        if self.offboard_setpoint_counter == 50:
             self.engage_offboard_mode()
             self.arm()
 
@@ -252,7 +252,7 @@ class TrackingControl(Node):
             # self.publish_position_setpoint_with_p_controller(self.waypoints[self.current_waypoint_index])
             self.publish_position_setpoint_with_pd_controller(self.waypoints[self.current_waypoint_index])
 
-        if self.offboard_setpoint_counter < 31:
+        if self.offboard_setpoint_counter < 51:
             self.offboard_setpoint_counter += 1
 
 
