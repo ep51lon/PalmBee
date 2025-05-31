@@ -57,12 +57,12 @@ def launch_setup(context: LaunchContext, *args, **kwargs):
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([os.path.join(
                 get_package_share_directory('pb_perception'), 'launch'),
-                '/zed_frd_tf_publisher_launch.py']),
+                '/zed_tf_publisher_launch.py']),
         ),
 
-        # Stereo Odometry Node
+        # Sensing and perception manager
         Node(
-            package='pb_perception', executable='publish_visual_odometry.py', output='screen',
+            package='pb_perception', executable='sensing_manager.py', output='screen',
         ),
 
         # Stereo Odometry Node
