@@ -33,6 +33,7 @@ class ControlManager(Node):
         
         self.ns = ''
         self.target_system_id = 1
+        self.dt = 0.1
 
         # Localise publisher, subscriber, and timer creation
         self._init_ros_interfaces()
@@ -58,8 +59,6 @@ class ControlManager(Node):
         ]
         self.current_waypoint_index = 0
         self.waypoint_timer = 0
-
-        self.dt = 0.1
 
         # Initialize pose tracking timer
         self.waiting_time = 0.0
