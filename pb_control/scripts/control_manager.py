@@ -6,6 +6,7 @@ from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, DurabilityPo
 from std_msgs.msg import String
 from px4_msgs.msg import OffboardControlMode, TrajectorySetpoint, VehicleCommand, VehicleGlobalPosition, VehicleLocalPosition, VehicleStatus, VehicleTrajectoryWaypoint
 from geographiclib.geodesic import Geodesic
+import numpy as np
 
 from transitions import Machine
 
@@ -45,8 +46,11 @@ class ControlManager(Node):
         self.previous_error = [0.0, 0.0, 0.0]
         self.home_position = [-6.886367753433963, 107.60964063527699, 0.16148334741592407]  # Store home position for NED conversion
 
-        self.kp = 1.5  # Proportional gain for the position controller
-        self.kd = 0.2  # Derivative gain for the position controller
+        # Separate gains for horizontal (x, y) and vertical (z)
+        self.kp_xy = 1.5  # Proportional gain for x, y
+        self.kp_z = 1.0   # Proportional gain for z
+        self.kd_xy = 0.2  # Derivative gain for x, y
+        self.kd_z = 0.1   # Derivative gain for z
 
         # Waypoints
         self.waypoints = [
@@ -83,6 +87,7 @@ class ControlManager(Node):
                                states=self.states,
                                transitions=self.transitions,
                                initial=States.INIT,
+                               after_state_change='print_control_state',
                                ignore_invalid_triggers=True)
         
     def _init_ros_interfaces(self):
@@ -205,88 +210,6 @@ class ControlManager(Node):
         self.trajectory_setpoint_publisher.publish(msg)
         self.get_logger().info(f"Publishing position setpoints {[x, y, z]}")
 
-    def lla_to_ned(self, lat, lon, alt):
-        """Convert LLA coordinates to NED coordinates."""
-        geod = Geodesic.WGS84
-        home_lat, home_lon, home_alt = self.home_position
-        g = geod.Inverse(home_lat, home_lon, lat, lon)
-        north = g['s12'] * (1 if g['azi1'] >= 0 else -1)
-        east = g['s12'] * (1 if g['azi1'] >= 90 else -1)
-        down = home_alt - alt
-        return north, east, down
-
-    def publish_position_setpoint_with_p_controller(self, desired_position):
-        """Calculate and publish position setpoint using a simple P controller (using local position)."""
-        current_position = self.vehicle_local_position
-        position_setpoint = TrajectorySetpoint()
-
-        # Use current local position (NED)
-        current_ned = [current_position.x, current_position.y, current_position.z]
-
-        # Calculate position setpoint using P control
-        position_setpoint.position = [
-            current_ned[0] + self.kp * (desired_position[0] - current_ned[0]),
-            current_ned[1] + self.kp * (desired_position[1] - current_ned[1]),
-            current_ned[2] + self.kp * (desired_position[2] - current_ned[2])
-        ]
-
-        # Keep the yaw constant
-        position_setpoint.yaw = 0.0  # (0 degree)
-
-        position_setpoint.timestamp = int(self.get_clock().now().nanoseconds / 1000)
-        self.trajectory_setpoint_publisher.publish(position_setpoint)
-        self.get_logger().info(f"Publishing position setpoints {position_setpoint.position} with yaw {position_setpoint.yaw}")
-
-    def publish_position_setpoint_with_pd_controller(self, desired_position):
-        """Calculate and publish position setpoint using a simple PD controller (using local position and estimated velocity)."""
-        current_position = self.vehicle_local_position
-        position_setpoint = TrajectorySetpoint()
-
-        # Use current local position (NED)
-        current_ned = [current_position.x, current_position.y, current_position.z]
-
-        # Calculate error
-        error = [
-            desired_position[0] - current_ned[0],
-            desired_position[1] - current_ned[1],
-            desired_position[2] - current_ned[2]
-        ]
-
-        # Estimate velocity using difference with previous position and sampling time
-        # Assume timer period is 0.1s as set in self.create_timer(0.1, ...)
-        dt = self.dt
-        if not hasattr(self, 'prev_ned'):
-            self.prev_ned = current_ned
-        estimated_vel = [
-            (current_ned[0] - self.prev_ned[0]) / dt,
-            (current_ned[1] - self.prev_ned[1]) / dt,
-            (current_ned[2] - self.prev_ned[2]) / dt
-        ]
-        self.prev_ned = current_ned
-
-        # Derivative term is negative estimated velocity
-        d_error = [
-            -estimated_vel[0],
-            -estimated_vel[1],
-            -estimated_vel[2]
-        ]
-
-        # PD control law
-        position_setpoint.position = [
-            current_ned[0] + self.kp * error[0] + self.kd * d_error[0],
-            current_ned[1] + self.kp * error[1] + self.kd * d_error[1],
-            current_ned[2] + self.kp * error[2] + self.kd * d_error[2]
-        ]
-
-        # Keep the yaw constant
-        position_setpoint.yaw = 0.0  # (90 degree)
-
-        position_setpoint.timestamp = int(self.get_clock().now().nanoseconds / 1000)
-        self.trajectory_setpoint_publisher.publish(position_setpoint)
-        self.get_logger().info(
-            f"Publishing PD position setpoints {position_setpoint.position} with yaw {position_setpoint.yaw}"
-        )
-
     def publish_vehicle_command(self, command, **params) -> None:
         """Publish a vehicle command."""
         msg = VehicleCommand()
@@ -311,27 +234,102 @@ class ControlManager(Node):
         msg.data = str(self.state)
         self.state_publisher.publish(msg)
 
+    def lla_to_ned(self, lat, lon, alt):
+        """Convert LLA coordinates to NED coordinates."""
+        geod = Geodesic.WGS84
+        home_lat, home_lon, home_alt = self.home_position
+        g = geod.Inverse(home_lat, home_lon, lat, lon)
+        north = g['s12'] * (1 if g['azi1'] >= 0 else -1)
+        east = g['s12'] * (1 if g['azi1'] >= 90 else -1)
+        down = home_alt - alt
+        return north, east, down
+
+    def publish_position_setpoint_with_p_controller(self, desired_position):
+        """P controller using vector/matrix notation, separate gains for xy and z."""
+        current_position = self.vehicle_local_position
+        position_setpoint = TrajectorySetpoint()
+
+        # State vectors
+        current_ned = np.array([current_position.x, current_position.y, current_position.z])
+        desired_ned = np.array(desired_position)
+
+        # Gain matrix (diagonal)
+        Kp = np.diag([self.kp_xy, self.kp_xy, self.kp_z])
+
+        # P control law: u = Kp * (desired - current)
+        control = Kp @ (desired_ned - current_ned)
+        position_setpoint.position = (current_ned + control).tolist()
+
+        # Keep the yaw constant
+        position_setpoint.yaw = 0.0
+
+        position_setpoint.timestamp = int(self.get_clock().now().nanoseconds / 1000)
+        self.trajectory_setpoint_publisher.publish(position_setpoint)
+        self.get_logger().info(f"Publishing position setpoints {position_setpoint.position} with yaw {position_setpoint.yaw}")
+
+    def publish_position_setpoint_with_pd_controller(self, desired_position):
+        """PD controller using vector/matrix notation, separate gains for xy and z."""
+        current_position = self.vehicle_local_position
+        position_setpoint = TrajectorySetpoint()
+
+        # State vectors
+        current_ned = np.array([current_position.x, current_position.y, current_position.z])
+        desired_ned = np.array(desired_position)
+
+        # Proportional gain matrix
+        Kp = np.diag([self.kp_xy, self.kp_xy, self.kp_z])
+        # Derivative gain matrix
+        Kd = np.diag([self.kd_xy, self.kd_xy, self.kd_z])
+
+        # Error
+        error = desired_ned - current_ned
+
+        # Estimate velocity using difference with previous position and sampling time
+        dt = self.dt
+        if not hasattr(self, 'prev_ned'):
+            self.prev_ned = current_ned
+        estimated_vel = (current_ned - self.prev_ned) / dt
+        self.prev_ned = current_ned
+
+        # Derivative term is negative estimated velocity
+        d_error = -estimated_vel
+
+        # PD control law: u = Kp * error + Kd * d_error
+        control = Kp @ error + Kd @ d_error
+        position_setpoint.position = (current_ned + control).tolist()
+
+        # Keep the yaw constant
+        position_setpoint.yaw = 0.0
+
+        position_setpoint.timestamp = int(self.get_clock().now().nanoseconds / 1000)
+        self.trajectory_setpoint_publisher.publish(position_setpoint)
+        self.get_logger().info(
+            f"Publishing PD position setpoints {position_setpoint.position} with yaw {position_setpoint.yaw}"
+        )
+
+    def print_control_state(self):
+        self.get_logger().info(f'Current state: {self.state}')
+
     def timer_callback(self) -> None:
         """Callback function for the timer."""
         self.publish_offboard_control_heartbeat_signal()
 
-        # Publish the current FSM state
-        self.publish_system_state()
-
-        # Log current position coordinates
-        self.get_logger().info(f"Home frame (LLA): {self.vehicle_local_position.ref_lat}, {self.vehicle_local_position.ref_lon}, {self.vehicle_local_position.ref_alt}")
-        self.get_logger().info(f"Current global position: lat={self.vehicle_global_position.lat}, lon={self.vehicle_global_position.lon}, alt={self.vehicle_global_position.alt}")
-        self.get_logger().info(f"Current local position: x={self.vehicle_local_position.x}, y={self.vehicle_local_position.y}, z={self.vehicle_local_position.z}")
+        # Reset waiting_time on state change
+        if not hasattr(self, 'last_state'):
+            self.last_state = self.state
+        if self.state != self.last_state:
+            self.waiting_time = 0.0
+            self.last_state = self.state
 
         # FSM logic
         if self.state == States.INIT:
             # PX4 arming_state: 1 = DISARMED, 2 = ARMED
             if self.vehicle_status.arming_state == self.vehicle_status.ARMING_STATE_DISARMED:
                 self.system_ready()
-            self.waiting_time += self.dt  # accumulate time in INIT
+            self.waiting_time += self.dt
             if self.waiting_time >= 5.0:
-                self.start_landing()  # use the new trigger name
-                self.waiting_time = 0.0  # reset timer
+                self.start_landing()
+                self.waiting_time = 0.0
         elif self.state == States.STANDBY:
             self.start_arming()
         elif self.state == States.ARMING:
@@ -341,7 +339,7 @@ class ControlManager(Node):
                 self.start_taking_off()
         elif self.state == States.TAKING_OFF:
             self.publish_position_setpoint_with_pd_controller(self.waypoints[self.current_waypoint_index])
-            self.waiting_time += self.dt  # accumulate time in POSE_TRACKING
+            self.waiting_time += self.dt
             if self.waiting_time >= 20.0:
                 self.waiting_time = 0.0  # reset timer
                 self.start_hover()
@@ -352,25 +350,45 @@ class ControlManager(Node):
                 self.track_pose()
         elif self.state == States.POSE_TRACKING:
             self.publish_position_setpoint_with_pd_controller(self.waypoints[self.current_waypoint_index])
-            self.waiting_time += self.dt  # accumulate time in POSE_TRACKING
+            self.waiting_time += self.dt
             if self.waiting_time >= 20.0:
                 self.waiting_time = 0.0  # reset timer
                 self.start_landing()  # use the new trigger name
         elif self.state == States.LANDING:
             self.land()
-            self.waiting_time += self.dt  # accumulate time in POSE_TRACKING
+            self.waiting_time += self.dt
             if self.waiting_time >= 20.0:
                 self.waiting_time = 0.0  # reset timer
                 self.start_disarming()  # use the new trigger name
         elif self.state == States.DISARMING:
-            self.disarm()
-            self.standby()  # return to STANDBY state
+            # Only disarm once per entry
+            if not hasattr(self, 'disarm_sent') or not self.disarm_sent:
+                self.disarm()
+                self.disarm_sent = True
+            else:
+                self.standby()
+                self.disarm_sent = False
         elif self.state == States.FAILSAFE:
             self.get_logger().warn("FAILSAFE state reached!")
         elif self.state == States.UNAVAILABLE:
             self.get_logger().warn("System unavailable!")
+        else:
+            self.get_logger().error(f"Unknown state: {self.state}")
 
-def main(args=None) -> None:
+        # Log current position coordinates (optional: reduce frequency)
+        if not hasattr(self, 'log_counter'):
+            self.log_counter = 0
+        self.log_counter += 1
+        if self.log_counter >= int(2.0 / self.dt):  # log every 1 second
+            self.get_logger().info(f"Home frame (LLA): {self.vehicle_local_position.ref_lat}, {self.vehicle_local_position.ref_lon}, {self.vehicle_local_position.ref_alt}")
+            self.get_logger().info(f"Current global position: lat={self.vehicle_global_position.lat}, lon={self.vehicle_global_position.lon}, alt={self.vehicle_global_position.alt}")
+            self.get_logger().info(f"Current local position: x={self.vehicle_local_position.x}, y={self.vehicle_local_position.y}, z={self.vehicle_local_position.z}")
+            self.log_counter = 0
+
+        # Publish the current FSM state
+        self.publish_system_state()
+
+def main(args=None):
     print('Starting Control Manager Node...')
     rclpy.init(args=args)
     cm = ControlManager()
