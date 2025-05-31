@@ -104,20 +104,19 @@ class SensingManager(Node):
 
         self.timer = self.create_timer(self.dt, self.timer_callback)
 
-    def _init_file_manage(self):
+    def _init_file_manager(self):
         # Create unique file name for pose data
         now = datetime.datetime.now()
         self.pose_filename = f"pose_{now.strftime('%Y%m%d_%H%M%S')}.txt"
         self.pose_file = open(self.pose_filename, 'a')
 
     def print_sensing_state(self):
-        self.get_logger().info(f'Sensing state: {self.state}')
+        self.get_logger().info(f'Current state: {self.state}')
 
     def publish_sensing_state(self):
         msg = String()
         msg.data = self.state
         self.sensing_state_publisher.publish(msg)
-        # self.get_logger().info(f'Published sensing state: {msg.data}')
     
     def publish_visual_odometry(self):
         self.get_transform()

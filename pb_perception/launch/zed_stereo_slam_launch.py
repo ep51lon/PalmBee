@@ -81,22 +81,22 @@ def launch_setup(context: LaunchContext, *args, **kwargs):
         ),
 
         # RTAB-Map Visualization
-        Node(
-            package='rtabmap_viz', executable='rtabmap_viz', output='screen',
-            parameters=parameters,
-            remappings=remappings
-        ),
-
-        # # Include Foxglove Bridge launch file
-        # IncludeLaunchDescription(
-        #     AnyLaunchDescriptionSource(
-        #         os.path.join(
-        #             get_package_share_directory('foxglove_bridge'),
-        #             'launch',
-        #             'foxglove_bridge_launch.xml'
-        #         )
-        #     ),
+        # Node(
+        #     package='rtabmap_viz', executable='rtabmap_viz', output='screen',
+        #     parameters=parameters,
+        #     remappings=remappings
         # ),
+
+        # Include Foxglove Bridge launch file
+        IncludeLaunchDescription(
+            AnyLaunchDescriptionSource(
+                os.path.join(
+                    get_package_share_directory('foxglove_bridge'),
+                    'launch',
+                    'foxglove_bridge_launch.xml'
+                )
+            ),
+        ),
     ]
 
 def generate_launch_description():
