@@ -46,6 +46,9 @@ class SensingManager(Node):
         # Init ROS2 interfaces
         self._init_ros_interfaces()
 
+        # Init data storing
+        self._init_data_storing()
+
         self.tf_world2cam = TransformStamped()
         self.odom_info = OdomInfo()
 
@@ -97,10 +100,16 @@ class SensingManager(Node):
 
         self.published = False
 
-        self.timer = self.create_timer(self.dt, self.timer_callback)  # 20Hz
+        self.timer = self.create_timer(self.dt, self.timer_callback)
+
+    def _init_data_storing(self):
+        self.file = open('sensing.txt', 'a')
 
     def print_sensing_state(self):
         self.get_logger().info(f'Sensing state: {self.state}')
+
+    def store_pose_data(self):
+        self.file.write(" ".join(self.pose_data))
 
     def publish_sensing_state(self):
         msg = String()
@@ -139,6 +148,10 @@ class SensingManager(Node):
         msg.position_variance = [1e-3, 1e-3, 1e-3]
         msg.orientation_variance = [1e-3, 1e-3, 1e-3]
         msg.velocity_variance = [1e2, 1e2, 1e2]  # very high uncertainty
+
+        self.pose_data = [msg.timestamp,
+                          msg.position[0], msg.position[1], msg.position[2],
+                          msg.q[1], msg.q[2], msg.q[3], msg.q[0]]
 
         self.vio_publisher.publish(msg)
 
@@ -204,6 +217,10 @@ class SensingManager(Node):
         
         # Publish sensing state
         self.publish_sensing_state()
+        self.store_pose_data()
+    
+    def __del__(self):
+        self.file.close()
 
 def main(args=None):
     rclpy.init(args=args)
