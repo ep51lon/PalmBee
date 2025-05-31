@@ -52,7 +52,7 @@ class SensingManager(Node):
         self._init_ros_interfaces()
 
         # Init data storing
-        self._init_data_storing()
+        self._init_file_manager()
 
     def _init_fsm(self):
         # FSM states and transitions
@@ -104,7 +104,7 @@ class SensingManager(Node):
 
         self.timer = self.create_timer(self.dt, self.timer_callback)
 
-    def _init_data_storing(self):
+    def _init_file_manage(self):
         # Create unique file name for pose data
         now = datetime.datetime.now()
         self.pose_filename = f"pose_{now.strftime('%Y%m%d_%H%M%S')}.txt"
