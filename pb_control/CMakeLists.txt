@@ -29,7 +29,9 @@ install(TARGETS
 ament_python_install_package(${PROJECT_NAME})
 # Install Python executables
 install(PROGRAMS
-  scripts/py_node.py
+  scripts/tracking_control.py
+  scripts/tracking_control_example.py
+  scripts/control_manager.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

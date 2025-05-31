@@ -37,6 +37,7 @@ install(PROGRAMS
   scripts/update_database.py
   scripts/retrieve_database.py
   scripts/call_request_position_service.py
+  scripts/sensing_manager.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
