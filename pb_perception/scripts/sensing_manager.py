@@ -35,16 +35,16 @@ class SensingManager(Node):
             depth=1
         )
 
+        # Initialize variables
+        self.tf_ok = False
+        self.waiting_time = 0.0
+        self.dt = 0.05
+        
         # Init FSM
         self._init_fsm()
 
         # Init ROS2 interfaces
         self._init_ros_interfaces()
-
-        # Initialize variables
-        self.tf_ok = False
-        self.waiting_time = 0.0
-        self.dt = 0.05
 
         self.tf_world2cam = TransformStamped()
         self.odom_info = OdomInfo()
