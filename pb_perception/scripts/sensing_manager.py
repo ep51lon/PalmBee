@@ -39,7 +39,8 @@ class SensingManager(Node):
         self.tf_ok = False
         self.waiting_time = 0.0
         self.dt = 0.05
-        
+        self.pose_data = []
+
         # Init FSM
         self._init_fsm()
 
@@ -107,9 +108,6 @@ class SensingManager(Node):
 
     def print_sensing_state(self):
         self.get_logger().info(f'Sensing state: {self.state}')
-
-    def store_pose_data(self):
-        self.file.write(" ".join(self.pose_data))
 
     def publish_sensing_state(self):
         msg = String()
@@ -217,10 +215,9 @@ class SensingManager(Node):
         
         # Publish sensing state
         self.publish_sensing_state()
-        self.store_pose_data()
     
-    def __del__(self):
-        self.file.close()
+    # def __del__(self):
+    #     self.file.close()
 
 def main(args=None):
     rclpy.init(args=args)
