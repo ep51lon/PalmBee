@@ -64,6 +64,8 @@ class ControlManager(Node):
 
         # Initialize pose tracking timer
         self.waiting_time = 0.0
+
+        self.operation_counter = 0  # Counter for operations
     
     def _init_fsm(self):
         self.states = [
@@ -328,7 +330,8 @@ class ControlManager(Node):
                 self.start_landing()
                 self.waiting_time = 0.0
         elif self.state == States.STANDBY:
-            self.start_arming()
+            if self.operation_counter == 0:
+                self.start_arming()
         elif self.state == States.ARMING:
             self.engage_offboard_mode()
             self.arm()
@@ -366,6 +369,7 @@ class ControlManager(Node):
                 self.disarm()
                 self.disarm_sent = True
             else:
+                self.operation_counter += 1
                 self.standby()
                 self.disarm_sent = False
         elif self.state == States.FAILSAFE:
