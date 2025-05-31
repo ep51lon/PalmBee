@@ -246,7 +246,7 @@ class ControlManager(Node):
     def publish_position_setpoint_with_p_controller(self, desired_position):
         """P controller using vector/matrix notation, separate gains for xy and z."""
         current_position = self.vehicle_local_position
-        position_setpoint = TrajectorySetpoint()
+        self.position_setpoint = TrajectorySetpoint()
 
         # State vectors
         current_ned = np.array([current_position.x, current_position.y, current_position.z])
@@ -257,19 +257,18 @@ class ControlManager(Node):
 
         # P control law: u = Kp * (desired - current)
         control = Kp @ (desired_ned - current_ned)
-        position_setpoint.position = (current_ned + control).tolist()
+        self.position_setpoint.position = (current_ned + control).tolist()
 
         # Keep the yaw constant
-        position_setpoint.yaw = 0.0
+        self.position_setpoint.yaw = 0.0
 
-        position_setpoint.timestamp = int(self.get_clock().now().nanoseconds / 1000)
-        self.trajectory_setpoint_publisher.publish(position_setpoint)
-        self.get_logger().info(f"Publishing position setpoints {position_setpoint.position} with yaw {position_setpoint.yaw}")
+        self.position_setpoint.timestamp = int(self.get_clock().now().nanoseconds / 1000)
+        self.trajectory_setpoint_publisher.publish(self.position_setpoint)
 
     def publish_position_setpoint_with_pd_controller(self, desired_position):
         """PD controller using vector/matrix notation, separate gains for xy and z."""
         current_position = self.vehicle_local_position
-        position_setpoint = TrajectorySetpoint()
+        self.position_setpoint = TrajectorySetpoint()
 
         # State vectors
         current_ned = np.array([current_position.x, current_position.y, current_position.z])
@@ -295,16 +294,13 @@ class ControlManager(Node):
 
         # PD control law: u = Kp * error + Kd * d_error
         control = Kp @ error + Kd @ d_error
-        position_setpoint.position = (current_ned + control).tolist()
+        self.position_setpoint.position = (current_ned + control).tolist()
 
         # Keep the yaw constant
-        position_setpoint.yaw = 0.0
+        self.position_setpoint.yaw = 0.0
 
-        position_setpoint.timestamp = int(self.get_clock().now().nanoseconds / 1000)
-        self.trajectory_setpoint_publisher.publish(position_setpoint)
-        self.get_logger().info(
-            f"Publishing PD position setpoints {position_setpoint.position} with yaw {position_setpoint.yaw}"
-        )
+        self.position_setpoint.timestamp = int(self.get_clock().now().nanoseconds / 1000)
+        self.trajectory_setpoint_publisher.publish(self.position_setpoint)
 
     def print_control_state(self):
         self.get_logger().info(f'Current state: {self.state}')
@@ -379,9 +375,11 @@ class ControlManager(Node):
             self.log_counter = 0
         self.log_counter += 1
         if self.log_counter >= int(2.0 / self.dt):  # log every 1 second
-            self.get_logger().info(f"Home frame (LLA): {self.vehicle_local_position.ref_lat}, {self.vehicle_local_position.ref_lon}, {self.vehicle_local_position.ref_alt}")
-            self.get_logger().info(f"Current global position: lat={self.vehicle_global_position.lat}, lon={self.vehicle_global_position.lon}, alt={self.vehicle_global_position.alt}")
-            self.get_logger().info(f"Current local position: x={self.vehicle_local_position.x}, y={self.vehicle_local_position.y}, z={self.vehicle_local_position.z}")
+            self.get_logger().info(f"Home (LLA): {self.vehicle_local_position.ref_lat}, {self.vehicle_local_position.ref_lon}, {self.vehicle_local_position.ref_alt}")
+            self.get_logger().info(f"Global (LLA): lat={self.vehicle_global_position.lat}, lon={self.vehicle_global_position.lon}, alt={self.vehicle_global_position.alt}")
+            self.get_logger().info(f"Local (XYZ): x={self.vehicle_local_position.x}, y={self.vehicle_local_position.y}, z={self.vehicle_local_position.z}")
+            if self.position_setpoint.position!=[0.0, 0.0, 0.0]:
+                self.get_logger().info(f"Position setpoints {self.position_setpoint.position} with yaw {self.position_setpoint.yaw}")
             self.log_counter = 0
 
         # Publish the current FSM state
