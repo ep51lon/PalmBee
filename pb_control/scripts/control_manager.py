@@ -26,7 +26,7 @@ class ControlManager(Node):
     """Node for controlling a vehicle in offboard mode with FSM."""
 
     def __init__(self) -> None:
-        super().__init__('motion_controller_node')
+        super().__init__('control_manager')
 
         # FSM states and transitions
         self._init_fsm()
@@ -49,14 +49,16 @@ class ControlManager(Node):
 
         # Separate gains for horizontal (x, y) and vertical (z)
         self.kp_xy = 1.5  # Proportional gain for x, y
-        self.kp_z = 1.0   # Proportional gain for z
+        self.kp_z = 1.2   # Proportional gain for z
         self.kd_xy = 0.2  # Derivative gain for x, y
-        self.kd_z = 0.1   # Derivative gain for z
+        self.kd_z = 0.15   # Derivative gain for z
 
         # Waypoints
         self.waypoints = [
             [0.0, 0.0, self.takeoff_height],
         ]
+        self.last_waypoint = []
+
         self.current_waypoint_index = 0
         self.waypoint_timer = 0
 
@@ -336,9 +338,11 @@ class ControlManager(Node):
             self.publish_position_setpoint_with_pd_controller(self.waypoints[self.current_waypoint_index])
             self.waiting_time += self.dt
             if self.waiting_time >= 20.0:
+                self.last_waypoint = self.waypoints[self.current_waypoint_index]
                 self.waiting_time = 0.0  # reset timer
                 self.start_hover()
         elif self.state == States.HOVERING:
+            self.publish_position_setpoint_with_pd_controller(self.last_waypoint)
             self.waiting_time += self.dt
             if self.waiting_time >= 20.0:
                 self.waiting_time = 0.0  # reset timer
@@ -347,6 +351,7 @@ class ControlManager(Node):
             self.publish_position_setpoint_with_pd_controller(self.waypoints[self.current_waypoint_index])
             self.waiting_time += self.dt
             if self.waiting_time >= 20.0:
+                self.last_waypoint = self.waypoints[self.current_waypoint_index]
                 self.waiting_time = 0.0  # reset timer
                 self.start_landing()  # use the new trigger name
         elif self.state == States.LANDING:
@@ -375,11 +380,11 @@ class ControlManager(Node):
             self.log_counter = 0
         self.log_counter += 1
         if self.log_counter >= int(2.0 / self.dt):  # log every 1 second
-            self.get_logger().info(f"Home (LLA): {self.vehicle_local_position.ref_lat}, {self.vehicle_local_position.ref_lon}, {self.vehicle_local_position.ref_alt}")
-            self.get_logger().info(f"Global (LLA): lat={self.vehicle_global_position.lat}, lon={self.vehicle_global_position.lon}, alt={self.vehicle_global_position.alt}")
-            self.get_logger().info(f"Local (XYZ): x={self.vehicle_local_position.x}, y={self.vehicle_local_position.y}, z={self.vehicle_local_position.z}")
-            if self.position_setpoint.position!=[0.0, 0.0, 0.0]:
-                self.get_logger().info(f"Position setpoints {self.position_setpoint.position} with yaw {self.position_setpoint.yaw}")
+            # self.get_logger().info(f"Home (LLA): {self.vehicle_local_position.ref_lat}, {self.vehicle_local_position.ref_lon}, {self.vehicle_local_position.ref_alt}")
+            # self.get_logger().info(f"Global (LLA): lat={self.vehicle_global_position.lat}, lon={self.vehicle_global_position.lon}, alt={self.vehicle_global_position.alt}")
+            self.get_logger().info(f"Local: x={self.vehicle_local_position.x:.3f}, y={self.vehicle_local_position.y:.3f}, z={self.vehicle_local_position.z:.3f}, heading={self.vehicle_local_position.heading:.3f}")
+            if self.position_setpoint.position.all()!=0.0:
+                self.get_logger().info(f"Pose setpoint {self.position_setpoint.position} with yaw {self.position_setpoint.yaw}")
             self.log_counter = 0
 
         # Publish the current FSM state

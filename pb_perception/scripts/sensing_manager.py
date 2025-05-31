@@ -26,7 +26,7 @@ class States:
 
 class SensingManager(Node):
     def __init__(self):
-        super().__init__('visual_odometry_publisher')
+        super().__init__('sensing_manager')
 
         # Configure QoS profile for publishing and subscribing
         self.qos_profile = QoSProfile(
