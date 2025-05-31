@@ -3,11 +3,11 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, DurabilityPolicy
+from std_msgs.msg import String
 from px4_msgs.msg import OffboardControlMode, TrajectorySetpoint, VehicleCommand, VehicleGlobalPosition, VehicleLocalPosition, VehicleStatus, VehicleTrajectoryWaypoint
 from geographiclib.geodesic import Geodesic
+
 from transitions import Machine
-import math
-from std_msgs.msg import String  # Add this import at the top with other imports
 
 class States:
     INIT = 'INIT'
@@ -46,7 +46,11 @@ class MotionController(Node):
             {'trigger': 'reset', 'source': States.FAILSAFE, 'dest': States.INIT},
             {'trigger': 'standby', 'source': '*', 'dest': States.STANDBY},
         ]
-        self.machine = Machine(model=self, states=self.states, transitions=self.transitions, initial=States.INIT, ignore_invalid_triggers=True)
+        self.machine = Machine(model=self,
+                               states=self.states,
+                               transitions=self.transitions,
+                               initial=States.INIT,
+                               ignore_invalid_triggers=True)
 
         # Configure QoS profile for publishing and subscribing
         qos_profile = QoSProfile(

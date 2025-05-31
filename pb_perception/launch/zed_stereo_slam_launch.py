@@ -57,7 +57,7 @@ def launch_setup(context: LaunchContext, *args, **kwargs):
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([os.path.join(
                 get_package_share_directory('pb_perception'), 'launch'),
-                '/system_tf_publisher_launch.py']),
+                '/zed_frd_tf_publisher_launch.py']),
         ),
 
         # Stereo Odometry Node
