@@ -60,10 +60,10 @@ def launch_setup(context: LaunchContext, *args, **kwargs):
                 '/zed_tf_publisher_launch.py']),
         ),
 
-        # # Sensing and perception manager
-        # Node(
-        #     package='pb_perception', executable='sensing_manager.py', output='screen',
-        # ),
+        # Sensing and perception manager
+        Node(
+            package='pb_perception', executable='sensing_manager.py', output='screen',
+        ),
 
         # Stereo Odometry Node
         Node(
@@ -80,23 +80,23 @@ def launch_setup(context: LaunchContext, *args, **kwargs):
             arguments=['-d']
         ),
 
-        RTAB-Map Visualization
-        Node(
-            package='rtabmap_viz', executable='rtabmap_viz', output='screen',
-            parameters=parameters,
-            remappings=remappings
-        ),
+        # RTAB-Map Visualization
+        # Node(
+        #     package='rtabmap_viz', executable='rtabmap_viz', output='screen',
+        #     parameters=parameters,
+        #     remappings=remappings
+        # ),
 
         # Include Foxglove Bridge launch file
-        # IncludeLaunchDescription(
-        #     AnyLaunchDescriptionSource(
-        #         os.path.join(
-        #             get_package_share_directory('foxglove_bridge'),
-        #             'launch',
-        #             'foxglove_bridge_launch.xml'
-        #         )
-        #     ),
-        # ),
+        IncludeLaunchDescription(
+            AnyLaunchDescriptionSource(
+                os.path.join(
+                    get_package_share_directory('foxglove_bridge'),
+                    'launch',
+                    'foxglove_bridge_launch.xml'
+                )
+            ),
+        ),
     ]
 
 def generate_launch_description():
