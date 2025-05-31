@@ -21,67 +21,20 @@ class States:
     POSE_TRACKING = 'POSE_TRACKING'
     FAILSAFE = 'FAILSAFE'
 
-class MotionController(Node):
+class ControlManager(Node):
     """Node for controlling a vehicle in offboard mode with FSM."""
 
     def __init__(self) -> None:
         super().__init__('motion_controller_node')
 
         # FSM states and transitions
-        self.states = [
-            States.INIT, States.STANDBY, States.UNAVAILABLE, States.HOVERING,
-            States.ARMING, States.DISARMING, States.TAKING_OFF, States.LANDING,
-            States.POSE_TRACKING, States.FAILSAFE
-        ]
-        self.transitions = [
-            {'trigger': 'system_ready', 'source': States.INIT, 'dest': States.STANDBY},
-            {'trigger': 'system_unavailable', 'source': '*', 'dest': States.UNAVAILABLE},
-            {'trigger': 'start_hover', 'source': [States.STANDBY, States.TAKING_OFF], 'dest': States.HOVERING},
-            {'trigger': 'start_arming', 'source': States.STANDBY, 'dest': States.ARMING},
-            {'trigger': 'start_disarming', 'source': '*', 'dest': States.DISARMING},
-            {'trigger': 'start_taking_off', 'source': States.ARMING, 'dest': States.TAKING_OFF},  # renamed from 'takeoff'
-            {'trigger': 'start_landing', 'source': '*', 'dest': States.LANDING},  # renamed from 'land'
-            {'trigger': 'track_pose', 'source': [States.HOVERING, States.TAKING_OFF], 'dest': States.POSE_TRACKING},
-            {'trigger': 'fail', 'source': '*', 'dest': States.FAILSAFE},
-            {'trigger': 'reset', 'source': States.FAILSAFE, 'dest': States.INIT},
-            {'trigger': 'standby', 'source': '*', 'dest': States.STANDBY},
-        ]
-        self.machine = Machine(model=self,
-                               states=self.states,
-                               transitions=self.transitions,
-                               initial=States.INIT,
-                               ignore_invalid_triggers=True)
-
-        # Configure QoS profile for publishing and subscribing
-        qos_profile = QoSProfile(
-            reliability=ReliabilityPolicy.BEST_EFFORT,
-            durability=DurabilityPolicy.TRANSIENT_LOCAL,
-            history=HistoryPolicy.KEEP_LAST,
-            depth=1
-        )
+        self._init_fsm()
         
         self.ns = ''
         self.target_system_id = 1
 
-        # Create publishers
-        self.offboard_control_mode_publisher = self.create_publisher(
-            OffboardControlMode, f'{self.ns}/fmu/in/offboard_control_mode', qos_profile)
-        self.trajectory_setpoint_publisher = self.create_publisher(
-            TrajectorySetpoint, f'{self.ns}/fmu/in/trajectory_setpoint', qos_profile)
-        self.vehicle_command_publisher = self.create_publisher(
-            VehicleCommand, f'{self.ns}/fmu/in/vehicle_command', qos_profile)
-        self.velocity_setpoint_publisher = self.create_publisher(
-            VehicleTrajectoryWaypoint, f'{self.ns}/fmu/in/vehicle_trajectory_waypoint', qos_profile)
-        # Publisher for system state
-        self.state_publisher = self.create_publisher(String, 'palmbee/system_state', 10)
-
-        # Create subscribers
-        self.vehicle_global_position_subscriber = self.create_subscription(
-            VehicleGlobalPosition, f'{self.ns}/fmu/out/vehicle_global_position', self.vehicle_global_position_callback, qos_profile)
-        self.vehicle_local_position_subscriber = self.create_subscription(
-            VehicleLocalPosition, f'{self.ns}/fmu/out/vehicle_local_position', self.vehicle_local_position_callback, qos_profile)
-        self.vehicle_status_subscriber = self.create_subscription(
-            VehicleStatus, f'{self.ns}/fmu/out/vehicle_status', self.vehicle_status_callback, qos_profile)
+        # Localise publisher, subscriber, and timer creation
+        self._init_ros_interfaces()
 
         # Initialize variables
         self.offboard_setpoint_counter = 0
@@ -104,11 +57,96 @@ class MotionController(Node):
 
         self.dt = 0.1
 
-        # Create a timer to publish control commands
-        self.timer = self.create_timer(self.dt, self.timer_callback)
-
         # Initialize pose tracking timer
         self.waiting_time = 0.0
+    
+    def _init_fsm(self):
+        self.states = [
+            States.INIT, States.STANDBY, States.UNAVAILABLE, States.HOVERING,
+            States.ARMING, States.DISARMING, States.TAKING_OFF, States.LANDING,
+            States.POSE_TRACKING, States.FAILSAFE
+        ]
+        self.transitions = [
+            {'trigger': 'system_ready', 'source': States.INIT, 'dest': States.STANDBY},
+            {'trigger': 'system_unavailable', 'source': '*', 'dest': States.UNAVAILABLE},
+            {'trigger': 'start_hover', 'source': [States.STANDBY, States.TAKING_OFF], 'dest': States.HOVERING},
+            {'trigger': 'start_arming', 'source': States.STANDBY, 'dest': States.ARMING},
+            {'trigger': 'start_disarming', 'source': '*', 'dest': States.DISARMING},
+            {'trigger': 'start_taking_off', 'source': States.ARMING, 'dest': States.TAKING_OFF},
+            {'trigger': 'start_landing', 'source': '*', 'dest': States.LANDING},
+            {'trigger': 'track_pose', 'source': [States.HOVERING, States.TAKING_OFF], 'dest': States.POSE_TRACKING},
+            {'trigger': 'fail', 'source': '*', 'dest': States.FAILSAFE},
+            {'trigger': 'reset', 'source': States.FAILSAFE, 'dest': States.INIT},
+            {'trigger': 'standby', 'source': '*', 'dest': States.STANDBY},
+        ]
+        self.machine = Machine(model=self,
+                               states=self.states,
+                               transitions=self.transitions,
+                               initial=States.INIT,
+                               ignore_invalid_triggers=True)
+        
+    def _init_ros_interfaces(self):
+        # Configure QoS profile for publishing and subscribing
+        self.qos_profile = QoSProfile(
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=1
+        )
+
+        """Initialise all ROS2 publishers, subscribers, and timer."""
+        # Publishers
+        self.offboard_control_mode_publisher = self.create_publisher(
+            OffboardControlMode,
+            f'{self.ns}/fmu/in/offboard_control_mode',
+            self.qos_profile
+        )
+        self.trajectory_setpoint_publisher = self.create_publisher(
+            TrajectorySetpoint,
+            f'{self.ns}/fmu/in/trajectory_setpoint',
+            self.qos_profile
+        )
+        self.vehicle_command_publisher = self.create_publisher(
+            VehicleCommand,
+            f'{self.ns}/fmu/in/vehicle_command',
+            self.qos_profile
+        )
+        self.velocity_setpoint_publisher = self.create_publisher(
+            VehicleTrajectoryWaypoint,
+            f'{self.ns}/fmu/in/vehicle_trajectory_waypoint',
+            self.qos_profile
+        )
+        self.state_publisher = self.create_publisher(
+            String, 
+            'palmbee/control_state',
+            self.qos_profile
+        )
+
+        # Subscribers
+        self.vehicle_global_position_subscriber = self.create_subscription(
+            VehicleGlobalPosition,
+            f'{self.ns}/fmu/out/vehicle_global_position',
+            self.vehicle_global_position_callback,
+            self.qos_profile
+        )
+        self.vehicle_local_position_subscriber = self.create_subscription(
+            VehicleLocalPosition,
+            f'{self.ns}/fmu/out/vehicle_local_position',
+            self.vehicle_local_position_callback,
+            self.qos_profile
+        )
+        self.vehicle_status_subscriber = self.create_subscription(
+            VehicleStatus,
+            f'{self.ns}/fmu/out/vehicle_status',
+            self.vehicle_status_callback,
+            self.qos_profile
+        )
+
+        # Timer
+        self.timer = self.create_timer(
+            self.dt, 
+            self.timer_callback
+        )
 
     def vehicle_global_position_callback(self, vehicle_global_position):
         """Callback function for vehicle_global_position topic subscriber."""
@@ -333,11 +371,11 @@ class MotionController(Node):
             self.get_logger().warn("System unavailable!")
 
 def main(args=None) -> None:
-    print('Starting offboard control node...')
+    print('Starting Control Manager Node...')
     rclpy.init(args=args)
-    motion_control = MotionController()
-    rclpy.spin(motion_control)
-    motion_control.destroy_node()
+    cm = ControlManager()
+    rclpy.spin(cm)
+    cm.destroy_node()
     rclpy.shutdown()
 
 if __name__ == '__main__':

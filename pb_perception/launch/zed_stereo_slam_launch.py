@@ -97,7 +97,6 @@ def launch_setup(context: LaunchContext, *args, **kwargs):
         #         )
         #     ),
         # ),
-        
     ]
 
 def generate_launch_description():

@@ -31,7 +31,7 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
   scripts/tracking_control.py
   scripts/tracking_control_example.py
-  scripts/motion_controller_node.py
+  scripts/control_manager.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
