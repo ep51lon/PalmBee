@@ -29,7 +29,6 @@ install(TARGETS
 ament_python_install_package(${PROJECT_NAME})
 # Install Python executables
 install(PROGRAMS
-  scripts/py_node.py
   scripts/get_markers.py
   scripts/detect_object.py
   scripts/publish_visual_odometry.py
