@@ -11,6 +11,7 @@ from rtabmap_msgs.msg import OdomInfo
 from std_msgs.msg import String
 
 import numpy as np
+import datetime
 
 from transitions import Machine
 
@@ -41,6 +42,9 @@ class SensingManager(Node):
         self.dt = 0.05
         self.pose_data = []
 
+        self.tf_world2cam = TransformStamped()
+        self.odom_info = OdomInfo()
+
         # Init FSM
         self._init_fsm()
 
@@ -49,9 +53,6 @@ class SensingManager(Node):
 
         # Init data storing
         self._init_data_storing()
-
-        self.tf_world2cam = TransformStamped()
-        self.odom_info = OdomInfo()
 
     def _init_fsm(self):
         # FSM states and transitions
@@ -104,7 +105,10 @@ class SensingManager(Node):
         self.timer = self.create_timer(self.dt, self.timer_callback)
 
     def _init_data_storing(self):
-        self.file = open('sensing.txt', 'a')
+        # Create unique file name for pose data
+        now = datetime.datetime.now()
+        self.pose_filename = f"pose_{now.strftime('%Y%m%d_%H%M%S')}.txt"
+        self.pose_file = open(self.pose_filename, 'a')
 
     def print_sensing_state(self):
         self.get_logger().info(f'Sensing state: {self.state}')
@@ -215,9 +219,18 @@ class SensingManager(Node):
         
         # Publish sensing state
         self.publish_sensing_state()
-    
-    # def __del__(self):
-    #     self.file.close()
+
+        # Save pose_data to file if available
+        if self.pose_data:
+            line = ' '.join(str(x) for x in self.pose_data)
+            self.pose_file.write(line + '\n')
+            self.pose_file.flush()
+
+    def __del__(self):
+        try:
+            self.pose_file.close()
+        except Exception:
+            pass
 
 def main(args=None):
     rclpy.init(args=args)
