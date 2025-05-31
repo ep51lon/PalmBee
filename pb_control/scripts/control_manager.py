@@ -384,7 +384,9 @@ class ControlManager(Node):
             # self.get_logger().info(f"Global (LLA): lat={self.vehicle_global_position.lat}, lon={self.vehicle_global_position.lon}, alt={self.vehicle_global_position.alt}")
             self.get_logger().info(f"Local: x={self.vehicle_local_position.x:.3f}, y={self.vehicle_local_position.y:.3f}, z={self.vehicle_local_position.z:.3f}, heading={self.vehicle_local_position.heading:.3f}")
             if self.position_setpoint.position.all()!=0.0:
-                self.get_logger().info(f"Pose setpoint {self.position_setpoint.position} with yaw {self.position_setpoint.yaw}")
+                pos = self.position_setpoint.position 
+                yaw = self.position_setpoint.yaw
+                self.get_logger().info(f"Pose setpoint x={pos[0]:.3f}, y={pos[1]:.3f}, z={pos[2]:.3f}, yaw={yaw:.3f}")
             self.log_counter = 0
 
         # Publish the current FSM state
