@@ -192,22 +192,33 @@ class SensingManager(Node):
             else:
                 self.get_logger().warn("Waiting for tracking to start...")
         elif self.state == States.TRACKING:
-            if self.odom_info.lost:
-                self.get_logger().info("Tracking lost...")
-                self.sm_lost()
+            if self.odom_info:
+                if self.odom_info.lost:
+                    self.get_logger().info("Tracking lost...")
+                    self.sm_lost()
+                else:
+                    self.publish_visual_odometry()
             else:
-                self.publish_visual_odometry()
-        elif self.state == States.LOST:
-            if not self.odom_info.lost:
-                self.get_logger().info("Tracking recovered...")
-                self.sm_tracking_recovered()
-            else:
-                self.get_logger().warn("Tracking lost, trying to recover...")
+                self.get_logger().warn("Waiting for odometry info...")
                 self.waiting_time += self.dt
-                if self.waiting_time >= 60.0:
+                if self.waiting_time >= 20.0:
                     self.waiting_time = 0.0
-                    self.get_logger().warn("Failed to recover tracking, going to failsafe...")
-                    self.sm_fail()
+                    self.get_logger().warn("Odometry info unavailable, tracking lost...")
+                    self.sm_lost()
+        elif self.state == States.LOST:
+            if self.odom_info:
+                if not self.odom_info.lost:
+                    self.get_logger().info("Tracking recovered...")
+                    self.sm_tracking_recovered()
+                else:
+                    self.get_logger().warn("Tracking lost, trying to recover...")
+                    self.waiting_time += self.dt
+                    if self.waiting_time >= 60.0:
+                        self.waiting_time = 0.0
+                        self.get_logger().warn("Failed to recover tracking, going to failsafe...")
+                        self.sm_fail()
+            else:
+                self.sm_fail()
         elif self.state == States.FAILSAFE:
             self.get_logger().error("In failsafe mode, reset the system!")
             self.waiting_time += self.dt
