@@ -82,6 +82,7 @@ class ControlManager(Node):
             {'trigger': 'start_taking_off', 'source': States.ARMING, 'dest': States.TAKING_OFF},
             {'trigger': 'start_landing', 'source': '*', 'dest': States.LANDING},
             {'trigger': 'track_pose', 'source': [States.HOVERING, States.TAKING_OFF], 'dest': States.POSE_TRACKING},
+            {'trigger': 'start_hover', 'source': States.POSE_TRACKING, 'dest': States.HOVERING},
             {'trigger': 'fail', 'source': '*', 'dest': States.FAILSAFE},
             {'trigger': 'reset', 'source': States.FAILSAFE, 'dest': States.INIT},
             {'trigger': 'standby', 'source': '*', 'dest': States.STANDBY},
