@@ -80,7 +80,7 @@ def launch_setup(context: LaunchContext, *args, **kwargs):
             arguments=['-d']
         ),
 
-        RTAB-Map Visualization
+        # RTAB-Map Visualization
         Node(
             package='rtabmap_viz', executable='rtabmap_viz', output='screen',
             parameters=parameters,
