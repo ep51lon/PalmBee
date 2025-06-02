@@ -153,7 +153,7 @@ class TrackingControl(Node):
         ]
 
         # Keep the yaw constant
-        position_setpoint.yaw = math.nan  # (0 degree)
+        position_setpoint.yaw = float('nan')  # (0 degree)
 
         position_setpoint.timestamp = int(self.get_clock().now().nanoseconds / 1000)
         self.trajectory_setpoint_publisher.publish(position_setpoint)
