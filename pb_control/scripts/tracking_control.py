@@ -51,8 +51,10 @@ class TrackingControl(Node):
         self.previous_error = [0.0, 0.0, 0.0]
         self.home_position = [-6.886367753433963, 107.60964063527699, 0.16148334741592407]  # Store home position for NED conversion
 
-        self.kp = 1.2  # Proportional gain for the position controller
-        self.kd = 0.2  # Derivative gain for the position controller
+        self.kp = 1.8  # Proportional gain for the position controller
+        self.kd = 0.6  # Derivative gain for the position controller
+        self.kp_z = 0.5
+        self.kd_z = 0.01
 
         # Waypoints
         self.waypoints = [
@@ -176,7 +178,7 @@ class TrackingControl(Node):
 
         # Estimate velocity using difference with previous position and sampling time
         # Assume timer period is 0.1s as set in self.create_timer(0.1, ...)
-        dt = 0.1
+        dt = self.dt
         if not hasattr(self, 'prev_ned'):
             self.prev_ned = current_ned
         estimated_vel = [
@@ -197,7 +199,7 @@ class TrackingControl(Node):
         position_setpoint.position = [
             current_ned[0] + self.kp * error[0] + self.kd * d_error[0],
             current_ned[1] + self.kp * error[1] + self.kd * d_error[1],
-            current_ned[2] + self.kp * error[2] + self.kd * d_error[2]
+            current_ned[2] + self.kp_z * error[2] + self.kd_z * d_error[2]
         ]
 
         # Keep the yaw constant

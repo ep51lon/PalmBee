@@ -89,6 +89,7 @@ class OffboardControl(Node):
         """Publish the trajectory setpoint."""
         msg = TrajectorySetpoint()
         msg.position = [x, y, z]
+        msg.velocity = [float('nan'), float('nan'), float('nan')]
         msg.yaw = float('nan')  # (90 degree)
         msg.timestamp = int(self.get_clock().now().nanoseconds / 1000)
         self.trajectory_setpoint_publisher.publish(msg)
