@@ -47,16 +47,16 @@ class TrackingControl(Node):
         self.vehicle_global_position = VehicleGlobalPosition()
         self.vehicle_local_position = VehicleLocalPosition()
         self.vehicle_status = VehicleStatus()
-        self.takeoff_height = -2.5
+        self.takeoff_height = -2.0
         self.previous_error = [0.0, 0.0, 0.0]
         self.home_position = [-6.886367753433963, 107.60964063527699, 0.16148334741592407]  # Store home position for NED conversion
 
-        self.kp = 1.5  # Proportional gain for the position controller
+        self.kp = 1.2  # Proportional gain for the position controller
         self.kd = 0.2  # Derivative gain for the position controller
 
         # Waypoints
         self.waypoints = [
-            [-1.0, 1.0, self.takeoff_height],
+            [0.0, 0.0, self.takeoff_height],
             # [0.0, 1.0, self.takeoff_height],
             # [1.0, 1.0, self.takeoff_height],
             # [1.0, 0.0, self.takeoff_height],
@@ -237,7 +237,7 @@ class TrackingControl(Node):
         self.get_logger().info(f"Current global position: lat={self.vehicle_global_position.lat}, lon={self.vehicle_global_position.lon}, alt={self.vehicle_global_position.alt}")
         self.get_logger().info(f"Current local position: x={self.vehicle_local_position.x}, y={self.vehicle_local_position.y}, z={self.vehicle_local_position.z}")
 
-        if self.offboard_setpoint_counter == 50:
+        if self.offboard_setpoint_counter == 30:
             self.engage_offboard_mode()
             self.arm()
 
@@ -252,7 +252,7 @@ class TrackingControl(Node):
             # self.publish_position_setpoint_with_p_controller(self.waypoints[self.current_waypoint_index])
             self.publish_position_setpoint_with_pd_controller(self.waypoints[self.current_waypoint_index])
 
-        if self.offboard_setpoint_counter < 51:
+        if self.offboard_setpoint_counter < 31:
             self.offboard_setpoint_counter += 1
 
 
