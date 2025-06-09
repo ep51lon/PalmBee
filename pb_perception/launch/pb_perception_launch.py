@@ -60,6 +60,13 @@ def launch_setup(context: LaunchContext, *args, **kwargs):
                 '/zed_tf_publisher_launch.py']),
         ),
 
+        # # Launch VIO tf publisher world->slam
+        # IncludeLaunchDescription(
+        #     PythonLaunchDescriptionSource([os.path.join(
+        #         get_package_share_directory('pb_perception'), 'launch'),
+        #         '/zed_odom_tf_publisher_launch.py']),
+        # ),
+
         # Sensing and perception manager
         Node(
             package='pb_perception', executable='sensing_manager.py', output='screen',
