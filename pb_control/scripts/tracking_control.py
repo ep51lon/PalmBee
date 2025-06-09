@@ -47,7 +47,7 @@ class TrackingControl(Node):
         self.vehicle_global_position = VehicleGlobalPosition()
         self.vehicle_local_position = VehicleLocalPosition()
         self.vehicle_status = VehicleStatus()
-        self.takeoff_height = -1.5
+        self.takeoff_height = -2.5
         self.previous_error = [0.0, 0.0, 0.0]
         self.home_position = [-6.886367753433963, 107.60964063527699, 0.16148334741592407]  # Store home position for NED conversion
 
@@ -56,7 +56,7 @@ class TrackingControl(Node):
 
         # Waypoints
         self.waypoints = [
-            [0.0, 0.0, self.takeoff_height],
+            [-1.0, 1.0, self.takeoff_height],
             # [0.0, 1.0, self.takeoff_height],
             # [1.0, 1.0, self.takeoff_height],
             # [1.0, 0.0, self.takeoff_height],
@@ -65,7 +65,7 @@ class TrackingControl(Node):
         self.current_waypoint_index = 0
         self.waypoint_timer = 0
 
-        self.dt = 0.1
+        self.dt = 0.05
 
         # Create a timer to publish control commands
         self.timer = self.create_timer(self.dt, self.timer_callback)
@@ -201,7 +201,7 @@ class TrackingControl(Node):
         ]
 
         # Keep the yaw constant
-        position_setpoint.yaw = 0.0  # (90 degree)
+        position_setpoint.yaw = float('nan') # (90 degree)
 
         position_setpoint.timestamp = int(self.get_clock().now().nanoseconds / 1000)
         self.trajectory_setpoint_publisher.publish(position_setpoint)

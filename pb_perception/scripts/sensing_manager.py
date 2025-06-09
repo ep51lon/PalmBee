@@ -39,7 +39,7 @@ class SensingManager(Node):
         # Initialize variables
         self.tf_ok = False
         self.waiting_time = 0.0
-        self.dt = 0.05
+        self.dt = 0.01
         self.pose_data = []
 
         self.tf_world2cam = TransformStamped()
